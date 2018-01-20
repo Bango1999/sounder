@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>JS Tone Sounder</title>
+        <style>
+            html, body {
+                font-family: 'Ubuntu', sans-serif;
+                width: 100vh;
+                height: 100vh;
+                font-size: 6vh;
+            }
+            #text {
+                position: relative;
+                top: 50%;
+                transform: translateY(-50%);
+                text-align: center;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="text">
+            <h2>Frequency: <span id="frequency"></span></h2>
+            <h2><span id="playing">Play</span>: Spacebar</span></h2>
+            <pre>Quick Tune:  Q / W</pre>
+            <pre>Medium Tune: E / R</pre>
+            <pre>Fine Tune:   T / Y</pre>
+        </div>
+
+
+        <script type="text/javascript">
+            var audioCtx = new (window.AudioContext || window.webkitAudioContext)(); // Audio Context
+            var oscillatorNode = audioCtx.createOscillator(); // Creates Oscillator Node
+            var gainNode = audioCtx.createGain(); // Creates Gain Node
+            var mute = true; // Muting Variable
+            var frequency = 500; // Sets Frequency to 500
+            var direction = ""; // Direction the User Tunes
+            var volume = 0.8; // Sets Volume At Default
+            var speed = 1; // Speed of Tune
+            var grossTune = 5; // Q/W Tuning
+            var mediumTune = 0.5; // E/R Tuning
+            var fineTune = 0.05; // T/Y Tuning
+            var keys = [
+                { key: 81, direction: "down", tune: grossTune },        // Q Key
+                { key: 87, direction: "up", tune: grossTune },          // W Key > Fast Tuning
+                { key: 65, direction: "down", tune: grossTune },        // A Key
+                { key: 90, direction: "up", tune: grossTune },          // Z Key > Fast Tuning (AZERTY Keyboards)
+                { key: 69, direction: "down", tune: mediumTune },       // E Key
+                { key: 82, direction: "up", tune: mediumTune },         // R Key > Medium Tuning
+                { key: 84, direction: "down", tune: fineTune },         // T Key
+                { key: 89, direction: "up", tune: fineTune }            // Y Key > Slow Tuning
+            ];
+            oscillatorNode.connect(gainNode); // Connects Oscillator Node to Gain Node
+            gainNode.connect(audioCtx.destination) // Connects Gain Node To Browser
+            oscillatorNode.start(); // Starts Node
+            oscillatorNode.frequency.value = frequency;
+            gainNode.gain.value = 0; // Makes Gain Value 0 at Default
+            (function manualLoop() { // Declares manualLoop Function
+                setTimeout(function() { // After 40 Milliseconds, do this \/
+                    manualLoop();
+                    if (direction == "up"){ // If a Key is Pressed and the Direction is Up, then
+                        frequency += speed; // the Speed is added to the Frequency.
+                    }
+                   if (direction == "down"){ // If a Key is Pressed and the Direction is Down, then
+                        frequency -= speed; // the Speed is subtracted from the Frequency.
+                    }
+                    oscillatorNode.frequency.value = frequency; // Actual Frequency to Frequency Variable.
+                    document.getElementById('frequency').innerHTML = frequency.toFixed(2); // Shows Frequency on Web Page.
+                }, 40);
+            }());
+            document.addEventListener('keydown', function(event) { // Key Presses
+                if (event.keyCode == 32) { // Space Bar (Mute and Unmute)
+                    if (mute) {
+                        gainNode.gain.value = volume;   // Sets Volume Variable to Actual Volume
+                        mute = false;                   // Turns Mute to False, so if space bar is pressed again, it will be true, due to if statement
+                        document.getElementById("playing").innerHTML = "Pause"; //                   ^
+                    } else {                            //                                          |
+                        gainNode.gain.value = 0;        // Sets Volume Variable to 0, Muting        |
+                        mute = true;                    // What this line said: --------------------+
+                        document.getElementById("playing").innerHTML = "Play";
+                    }
+                }
+                for (var i = keys.length - 1; i >= 0; i--) {
+                    if(event.keyCode == keys[i].key) { // Gets Key Code and Applies to "keys" index
+                        direction = keys[i].direction; // Sends Tuning in Direction of Key Pressed
+                        speed = keys[i].tune; // Sets Tuning Speed
+                    }
+                }
+            });
+            document.addEventListener('keyup', function(event) {
+                direction = ""; // Sets Direction to Nothing Again
+            });
+        </script>
+    </body>
+</html>
